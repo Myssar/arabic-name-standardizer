@@ -1,0 +1,296 @@
+/**
+ * The workspace: source list · names · inspector.
+ *
+ * The inspector is the point of the layout. Most names need nothing, so the
+ * third column stays closed and the names get the full width; it opens only
+ * when a row is selected, and answers the one question that matters — where
+ * did this spelling come from, and do I trust it.
+ */
+
+html, body { height: 100%; }
+body { background: var(--surface); overflow: hidden; }
+
+.app {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  transition: grid-template-columns .16s ease;
+}
+.app.with-inspector { grid-template-columns: 216px minmax(0, 1fr) 288px; }
+
+/* ------------------------------------------------------------- sidebar */
+
+.side {
+  background: var(--side);
+  border-inline-start: .5px solid var(--sep);
+  padding: .75rem .55rem .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+}
+.side-h {
+  font-size: .72rem;
+  color: var(--label-3);
+  padding: .6rem .6rem .35rem;
+}
+.side-h:first-child { padding-top: .1rem; }
+
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  width: 100%;
+  padding: .42rem .6rem;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--label);
+  font-size: .88rem;
+  text-align: start;
+}
+.side-item:hover:not(:disabled) { background: rgba(60, 60, 67, .06); }
+.side-item .side-label { flex: 1; min-width: 0; }
+.side-item .side-count { font-size: .78rem; color: var(--label-3); }
+.side-item .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--label-3); flex: 0 0 auto;
+}
+.side-item.is-warn .dot { background: var(--amber); }
+.side-item.is-on {
+  background: var(--sage);
+  color: #fff;
+  font-weight: 600;
+}
+.side-item.is-on .dot { background: #fff; }
+.side-item.is-on .side-count { color: rgba(255, 255, 255, .82); }
+.side-item:disabled { opacity: .45; }
+
+.side-new {
+  margin-top: auto;
+  justify-content: flex-start;
+  background: transparent;
+  color: var(--sage-d);
+  font-size: .86rem;
+  padding: .45rem .6rem;
+}
+.side-new:hover:not(:disabled) { background: rgba(60, 60, 67, .06); }
+.side .lang-toggle { margin: .3rem .35rem 0; align-self: flex-start; }
+
+/* -------------------------------------------------------------- toolbar */
+
+.main { display: flex; flex-direction: column; min-width: 0; }
+
+.toolbar {
+  height: 52px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 1.1rem;
+  border-bottom: .5px solid var(--sep);
+}
+.tool-title { font-size: .95rem; font-weight: 600; white-space: nowrap; }
+.tool-title em {
+  font-style: normal; font-weight: 400;
+  color: var(--label-2); font-size: .82rem;
+  margin-inline-start: .5rem;
+}
+.tool-actions { display: flex; align-items: center; gap: .45rem; }
+.tool-actions button { height: 28px; padding: 0 .8rem; font-size: .85rem; }
+
+.search {
+  display: inline-flex; align-items: center; gap: .35rem;
+  height: 28px; padding: 0 .6rem;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  color: var(--label-3);
+  min-width: 9.5rem;
+}
+.search input {
+  border: 0; background: transparent; padding: 0;
+  font-size: .82rem; height: 100%;
+  color: var(--label);
+}
+.search input:focus { box-shadow: none; border: 0; }
+
+/* --------------------------------------------------------------- subbar */
+
+.subbar {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: .45rem 1.1rem;
+  border-bottom: .5px solid var(--sep);
+  background: var(--side);
+  font-size: .82rem;
+}
+.ctl { display: inline-flex; align-items: center; gap: .4rem; color: var(--label-2); white-space: nowrap; }
+.ctl select { width: auto; max-width: 15rem; font-size: .82rem; padding: .2rem .4rem; }
+.ctl-check input { accent-color: var(--sage); }
+.subbar-note { margin-inline-start: auto; }
+
+/* ---------------------------------------------------------- empty state */
+
+.empty {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .55rem; padding: 2.5rem 2rem; text-align: center; position: relative;
+}
+.empty-t { font-size: 1.2rem; font-weight: 600; letter-spacing: -.01em; }
+.empty-d { margin: 0; font-size: .9rem; color: var(--label-2); line-height: 1.8; max-width: 34ch; }
+.empty button { margin-top: .5rem; }
+
+/*
+ * An invisible textarea across the empty state. The instruction is "paste your
+ * names", so pasting must work without hunting for a box to click first — this
+ * catches the paste wherever the cursor happens to be.
+ */
+.paste-catcher {
+  position: absolute; inset: 0;
+  opacity: 0; border: 0; resize: none; cursor: default;
+  padding: 0;
+}
+.paste-catcher:focus { box-shadow: none; border: 0; }
+
+/* --------------------------------------------------------------- names */
+
+.cols, .row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1.12fr) 104px;
+  gap: .9rem;
+  align-items: center;
+  padding: 0 1.1rem;
+}
+.cols {
+  flex: 0 0 auto;
+  height: 30px;
+  border-bottom: .5px solid var(--sep);
+  background: var(--gray-50);
+  font-size: .72rem;
+  color: var(--label-3);
+}
+.cols .c-src { text-align: end; }
+
+.rows { flex: 1; overflow-y: auto; }
+
+.row {
+  width: 100%;
+  min-height: 42px;
+  padding-block: .45rem;
+  border-bottom: .5px solid var(--sep-2);
+  background: transparent;
+  border-radius: 0;
+  text-align: start;
+  font-family: var(--ar);
+}
+.row:hover:not(:disabled) { background: var(--gray-50); }
+.row .r-num { font-size: .76rem; color: var(--label-3); }
+.row .r-ar { font-size: .95rem; color: var(--label-2); line-height: 1.5; overflow-wrap: anywhere; }
+.row .r-en {
+  font-family: var(--sf);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--label);
+  direction: ltr; text-align: left;
+  overflow-wrap: anywhere;
+}
+.row .r-src { font-size: .78rem; color: var(--label-3); text-align: end; }
+
+.row[data-review="true"] { background: var(--amber-bg); }
+.row[data-review="true"] .r-en,
+.row[data-review="true"] .r-src { color: var(--amber); }
+.row[data-status="blank"] .r-ar,
+.row[data-status="blank"] .r-en { color: var(--label-3); font-weight: 400; }
+
+.row.is-selected { background: var(--sage-l); }
+.row.is-selected .r-src { color: var(--sage-d); }
+
+.truncation { flex: 0 0 auto; margin: 0; padding: .5rem 1.1rem; font-size: .8rem; }
+
+/* ----------------------------------------------------------- status bar */
+
+.statusbar {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 1rem;
+  padding: .45rem 1.1rem;
+  border-top: .5px solid var(--sep);
+  font-size: .78rem;
+  color: var(--label-2);
+}
+.status-keys { margin-inline-start: auto; display: flex; gap: .8rem; }
+.statusbar kbd {
+  font-family: var(--sf); font-size: .7rem;
+  background: var(--fill); border-radius: 5px;
+  padding: .05rem .35rem; margin-inline-end: .3rem;
+  color: var(--label-2);
+}
+
+/* ------------------------------------------------------------ inspector */
+
+.inspector {
+  border-inline-start: .5px solid var(--sep);
+  background: var(--gray-50);
+  padding: .9rem .9rem .8rem;
+  display: flex; flex-direction: column; gap: .85rem;
+  overflow-y: auto;
+}
+.ins-h { font-size: .72rem; color: var(--label-3); margin-bottom: .3rem; }
+.ins-ar { font-size: 1.1rem; line-height: 1.5; overflow-wrap: anywhere; }
+.ins-field { display: block; }
+.ins-field input {
+  font-family: var(--sf); font-size: .95rem; font-weight: 600;
+  direction: ltr; text-align: left;
+  background: var(--surface);
+}
+.ins-parts, .ins-alt { display: flex; flex-wrap: wrap; gap: .35rem; }
+.ins-part {
+  font-size: .76rem;
+  background: var(--surface);
+  border: .5px solid var(--sep);
+  border-radius: 7px;
+  padding: .15rem .45rem;
+  color: var(--label-2);
+}
+.ins-part b { color: var(--label); font-weight: 600; font-family: var(--sf); }
+.ins-part[data-source="rules"],
+.ins-part[data-source="unromanized"] {
+  border-color: var(--amber-bd);
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.ins-alt button {
+  font-family: var(--sf); font-size: .78rem;
+  background: var(--fill); color: var(--label-2);
+  padding: .15rem .5rem; border-radius: 7px;
+}
+.ins-save {
+  display: flex; align-items: flex-start; gap: .45rem;
+  font-size: .78rem; color: var(--label-2); line-height: 1.65;
+}
+.ins-save input { accent-color: var(--sage); margin-top: .18rem; }
+.ins-acts { margin-top: auto; display: flex; gap: .45rem; }
+.ins-acts button { flex: 1; height: 30px; }
+
+/* ------------------------------------------------------------ drop veil */
+
+.drop-veil {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(95, 127, 110, .12);
+  border: 2px dashed var(--sage);
+  display: grid; place-items: center;
+  font-size: 1.1rem; color: var(--sage-d); font-weight: 600;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------- narrow */
+
+@media (max-width: 880px) {
+  .app, .app.with-inspector { grid-template-columns: 1fr; }
+  .side { flex-direction: row; align-items: center; overflow-x: auto; border-inline-start: 0;
+          border-bottom: .5px solid var(--sep); padding: .4rem .5rem; }
+  .side-h, .side-new, .side .lang-toggle { display: none; }
+  .inspector { display: none; }
+  .cols, .row { grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr); }
+  .cols .c-src, .row .r-src { display: none; }
+}

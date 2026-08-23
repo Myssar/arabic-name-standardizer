@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="bulk.title">قائمة الأسماء</title>
+  <link rel="stylesheet" href="../theme/theme.css">
+  <link rel="stylesheet" href="bulk.css">
+</head>
+<body>
+
+<!--
+  A source list on one side, the names on the other, and an inspector that
+  appears only when a name needs a decision. Three regions, no tabs, no steps.
+-->
+<div class="app" id="app">
+
+  <!-- ---------------------------------------------------------- sidebar -->
+  <aside class="side">
+    <div class="side-h" data-i18n="side.lists"></div>
+    <button type="button" class="side-item is-on" id="nav-all">
+      <span class="dot"></span>
+      <span class="side-label" data-i18n="side.currentList"></span>
+      <span class="side-count num" id="count-all">0</span>
+    </button>
+
+    <div class="side-h" data-i18n="side.view"></div>
+    <button type="button" class="side-item is-warn" id="nav-review">
+      <span class="dot"></span>
+      <span class="side-label" data-i18n="side.needsReview"></span>
+      <span class="side-count num" id="count-review">0</span>
+    </button>
+    <button type="button" class="side-item" id="nav-approved">
+      <span class="dot"></span>
+      <span class="side-label" data-i18n="side.approvedByYou"></span>
+      <span class="side-count num" id="count-approved">0</span>
+    </button>
+
+    <div class="side-h" data-i18n="side.dictionary"></div>
+    <button type="button" class="side-item" id="nav-saved">
+      <span class="dot"></span>
+      <span class="side-label" data-i18n="side.myNames"></span>
+    </button>
+    <button type="button" class="side-item" id="nav-how">
+      <span class="dot"></span>
+      <span class="side-label" data-i18n="side.howItWorks"></span>
+    </button>
+
+    <button type="button" class="side-new" id="clear">
+      <span aria-hidden="true">＋</span> <span data-i18n="side.newList"></span>
+    </button>
+    <div class="lang-toggle" id="lang"></div>
+  </aside>
+
+  <!-- ------------------------------------------------------------- main -->
+  <main class="main">
+
+    <div class="toolbar">
+      <h1 class="tool-title">
+        <span id="view-title" data-i18n="side.currentList"></span>
+        <em id="view-sub"></em>
+      </h1>
+      <div class="tool-actions">
+        <label class="search">
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor"
+               stroke-width="1.6" aria-hidden="true">
+            <circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path>
+          </svg>
+          <input type="search" id="search" data-i18n-attr="placeholder:bulk.search" autocomplete="off">
+        </label>
+        <button type="button" id="download-xlsx" data-i18n="bulk.downloadXlsx" disabled></button>
+        <button type="button" id="download-csv" data-i18n="bulk.download" disabled></button>
+        <button type="button" id="copy-column" class="primary" data-i18n="bulk.copyColumn" disabled></button>
+      </div>
+    </div>
+
+    <!-- Source controls only appear once there is a grid with a choice to make -->
+    <div class="subbar" id="controls" hidden>
+      <label class="ctl" id="sheet-control">
+        <span data-i18n="bulk.sheet"></span>
+        <select id="sheet"></select>
+      </label>
+      <label class="ctl" id="column-control">
+        <span data-i18n="bulk.column"></span>
+        <select id="column"></select>
+      </label>
+      <label class="ctl ctl-check">
+        <input type="checkbox" id="header">
+        <span data-i18n="bulk.header"></span>
+      </label>
+      <span class="subbar-note muted" id="source-label"></span>
+    </div>
+
+    <!-- Empty state: the whole window is a drop target -->
+    <div class="empty" id="empty">
+      <div class="empty-t" data-i18n="bulk.emptyTitle"></div>
+      <p class="empty-d" data-i18n="bulk.emptyBody"></p>
+      <button type="button" id="drop-btn" class="primary" data-i18n="bulk.chooseFile"></button>
+      <textarea id="input" class="paste-catcher" dir="auto" spellcheck="false"
+                data-i18n-attr="placeholder:bulk.pastePlaceholder"></textarea>
+      <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
+    </div>
+
+    <!-- Results -->
+    <div class="cols" id="cols" hidden>
+      <span class="c-num">#</span>
+      <span class="c-ar" data-i18n="bulk.colArabic"></span>
+      <span class="c-en">Standard form</span>
+      <span class="c-src" data-i18n="bulk.colSource"></span>
+    </div>
+    <div class="rows" id="rows" hidden></div>
+
+    <p id="truncation" class="truncation faint" hidden></p>
+
+    <div class="statusbar">
+      <span id="status-note" data-i18n="bulk.aligned"></span>
+      <span class="status-keys">
+        <span><kbd>⌘C</kbd><span data-i18n="bulk.kbdCopy"></span></span>
+        <span><kbd>↑↓</kbd><span data-i18n="bulk.kbdMove"></span></span>
+      </span>
+    </div>
+  </main>
+
+  <!-- -------------------------------------------------------- inspector -->
+  <aside class="inspector" id="inspector" hidden>
+    <div>
+      <div class="ins-h" data-i18n="bulk.colArabic"></div>
+      <div class="ins-ar" id="ins-arabic"></div>
+    </div>
+
+    <label class="ins-field">
+      <span class="ins-h">Standard form</span>
+      <input type="text" id="ins-standard" class="latin" spellcheck="false">
+    </label>
+
+    <div>
+      <div class="ins-h" data-i18n="bulk.whereFrom"></div>
+      <div class="ins-parts" id="ins-parts"></div>
+    </div>
+
+    <div id="ins-alt-wrap" hidden>
+      <div class="ins-h" data-i18n="bulk.otherSpellings"></div>
+      <div class="ins-alt" id="ins-alt"></div>
+    </div>
+
+    <label class="ins-save">
+      <input type="checkbox" id="ins-remember" checked>
+      <span data-i18n="bulk.rememberThis"></span>
+    </label>
+
+    <div class="ins-acts">
+      <button type="button" id="ins-skip" data-i18n="bulk.skip"></button>
+      <button type="button" id="ins-approve" class="primary" data-i18n="bulk.approve"></button>
+    </div>
+  </aside>
+
+</div>
+
+<div class="drop-veil" id="drop" hidden><span data-i18n="bulk.dropHere"></span></div>
+
+<script type="module" src="bulk.js"></script>
+</body>
+</html>
