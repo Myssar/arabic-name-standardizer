@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="welcome.title"></title>
+  <link rel="stylesheet" href="../theme/theme.css">
+  <link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+<main class="page">
+
+  <header class="hero">
+    <img src="../../icons/icon128.png" alt="" width="72" height="72">
+    <div>
+      <h1 data-i18n="welcome.title"></h1>
+      <p class="muted lede" data-i18n="welcome.lede"></p>
+    </div>
+    <div class="lang-toggle" id="lang"></div>
+  </header>
+
+  <section class="dotbox dotbox--tint demo">
+    <div class="demo-row"><span class="ar">محمد</span><span class="arrow">←</span><span class="en">Muhammad</span></div>
+    <div class="demo-row"><span class="ar">عبد الرحمن</span><span class="arrow">←</span><span class="en">Abdulrahman</span></div>
+    <div class="demo-row"><span class="ar">فاطمة الزهراء</span><span class="arrow">←</span><span class="en">Fatima Al-Zahraa</span></div>
+  </section>
+
+  <section class="steps">
+    <div class="dotbox step"><span class="n">1</span><p data-i18n="welcome.step1"></p></div>
+    <div class="dotbox step"><span class="n">2</span><p data-i18n="welcome.step2"></p></div>
+    <div class="dotbox step"><span class="n">3</span><p data-i18n="welcome.step3"></p></div>
+  </section>
+
+  <section class="dotbox dotbox--strong privacy">
+    <h2 data-i18n="welcome.privacy"></h2>
+    <p class="muted" data-i18n="welcome.privacyBody"></p>
+  </section>
+
+  <p class="cta">
+    <button type="button" id="start" class="primary" data-i18n="welcome.start"></button>
+  </p>
+
+  <hr class="dotrule">
+  <p class="faint once" data-i18n="welcome.once"></p>
+
+</main>
+<script type="module" src="welcome.js"></script>
+</body>
+</html>

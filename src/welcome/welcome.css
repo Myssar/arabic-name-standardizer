@@ -1,0 +1,49 @@
+/**
+ * First run. Says what the tool does in three lines and gets out of the way.
+ */
+
+body { background: var(--grouped); }
+.page { max-width: 50rem; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+
+.hero { display: flex; align-items: flex-start; gap: 1.2rem; flex-wrap: wrap; }
+.hero img { border-radius: var(--r-lg); }
+.hero > div:nth-child(2) { flex: 1; min-width: 18rem; }
+.lede { margin: .4rem 0 0; max-width: 44rem; font-size: 1.05rem; line-height: 1.75; }
+
+.demo { margin-top: 2rem; padding: .4rem 1.1rem; }
+.demo-row {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 1.2rem; padding: .7rem 0;
+}
+.demo-row + .demo-row { border-top: .5px solid var(--sep-2); }
+.demo-row .ar { font-size: 1.25rem; color: var(--label-2); }
+.demo-row .arrow { color: var(--label-3); font-size: 1rem; }
+.demo-row .en {
+  font-family: var(--sf); font-size: 1.2rem; font-weight: 600; letter-spacing: -.01em;
+  direction: ltr; text-align: left; color: var(--label);
+}
+
+.steps {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: .8rem; margin-top: 1.4rem;
+}
+@media (max-width: 46rem) { .steps { grid-template-columns: 1fr; } }
+.step { display: flex; gap: .7rem; align-items: flex-start; }
+.step p { margin: 0; font-size: .95rem; color: var(--label-2); line-height: 1.7; }
+.step .n {
+  flex: 0 0 auto;
+  width: 1.6rem; height: 1.6rem;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--sage); color: #fff;
+  font-family: var(--sf); font-size: .82rem; font-weight: 600;
+}
+
+.privacy { margin-top: 1.4rem; }
+.privacy h2 { margin-bottom: .3rem; }
+.privacy p { margin: 0; max-width: 60ch; color: var(--label-2); }
+
+.cta { margin-top: 1.6rem; }
+.cta button { font-size: 1.05rem; padding: .65rem 1.6rem; }
+
+.once { font-size: .85rem; color: var(--label-3); }
