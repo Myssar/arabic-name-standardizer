@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="app.name">موحّد الأسماء العربية</title>
+  <link rel="stylesheet" href="../theme/theme.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="head">
+    <div>
+      <h1 data-i18n="app.name"></h1>
+      <p class="muted tagline" data-i18n="app.tagline"></p>
+    </div>
+    <div class="lang-toggle" id="lang"></div>
+  </header>
+
+  <label class="field">
+    <span class="label" data-i18n="popup.inputLabel"></span>
+    <textarea id="input" class="ar" rows="2" spellcheck="false" autofocus
+              data-i18n-attr="placeholder:popup.placeholder"></textarea>
+  </label>
+
+  <section id="result" class="dotbox dotbox--strong result" hidden aria-live="polite">
+    <p class="label" data-i18n="popup.result"></p>
+    <div class="result-row">
+      <output id="standard" class="standard"></output>
+      <button type="button" id="copy" class="primary" data-i18n="popup.copy"></button>
+    </div>
+  </section>
+
+  <p id="placeholder" class="muted empty" data-i18n="popup.empty"></p>
+
+  <hr class="dotrule">
+
+  <footer class="foot">
+    <button type="button" id="bulk" class="quiet" data-i18n="popup.bulk"></button>
+    <button type="button" id="options" class="quiet" data-i18n="popup.options"></button>
+    <p class="faint count"><span id="count"></span> <span data-i18n="popup.names"></span></p>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

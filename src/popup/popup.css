@@ -1,0 +1,59 @@
+/**
+ * The popup is a Quick View: one field, one answer, one action.
+ *
+ * The standardized name is the largest thing in the window because it is the
+ * only thing the user came for; everything else is a footnote in grey.
+ */
+
+body { width: 25rem; }
+
+.head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .8rem;
+  padding: .75rem .9rem;
+  border-bottom: .5px solid var(--sep);
+}
+.head h1 { font-size: .95rem; font-weight: 600; }
+.tagline { display: none; }          /* the name of the tool says enough here */
+
+label.field { display: block; padding: .9rem .9rem 0; }
+textarea { min-height: 3.2rem; font-size: 1.15rem; }
+
+/* ------------------------------------------------------------------ result */
+
+.result { padding: .9rem .9rem 0; background: transparent; border-radius: 0; }
+.result .label { margin-bottom: .25rem; }
+
+.result-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .8rem;
+  /* The Latin name reads left-to-right whatever the interface language, so the
+     row is pinned LTR: otherwise the name floats away from its own edge and
+     the copy button lands on the wrong side of it. */
+  direction: ltr;
+}
+
+.standard {
+  font-family: var(--sf);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.3;
+  word-break: break-word;
+  color: var(--label);
+  direction: ltr;
+  text-align: left;
+  flex: 1;
+}
+
+.empty { font-size: .9rem; margin: .9rem .9rem 0; color: var(--label-2); }
+
+hr.dotrule { margin: .9rem 0 0; }
+
+/* ------------------------------------------------------------------ footer */
+
+.foot {
+  display: flex; align-items: center; gap: .3rem; flex-wrap: wrap;
+  padding: .55rem .7rem .7rem;
+}
+.foot .count { margin: 0; margin-inline-start: auto; font-size: .78rem; padding-inline-end: .25rem; }
