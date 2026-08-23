@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="options.title">إدارة القاموس</title>
+  <link rel="stylesheet" href="../theme/theme.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="head">
+    <div>
+      <p class="eyebrow" data-i18n="app.name">موحّد الأسماء العربية</p>
+      <h1 data-i18n="options.title">إدارة القاموس</h1>
+      <p class="muted" data-i18n="options.lede"></p>
+    </div>
+    <div class="lang-toggle" id="lang"></div>
+  </header>
+
+  <section class="dotbox dotbox--tint assist-row">
+    <div>
+      <h3 data-i18n="options.assistTitle"></h3>
+      <p class="muted small" data-i18n="options.assistBody"></p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="assist">
+      <span data-i18n="options.assistEnable"></span>
+    </label>
+  </section>
+
+  <section class="dotbox add-box">
+    <h2 data-i18n="options.addTitle"></h2>
+    <div class="add-grid">
+      <label class="field">
+        <span class="label" data-i18n="options.arabic"></span>
+        <input type="text" id="arabic" class="ar" dir="rtl" spellcheck="false" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="label" data-i18n="options.english"></span>
+        <input type="text" id="english" dir="ltr" spellcheck="false" autocomplete="off">
+      </label>
+      <button type="button" id="add" class="primary" data-i18n="options.add"></button>
+    </div>
+    <p id="add-msg" class="msg" hidden></p>
+  </section>
+
+  <hr class="dotrule">
+
+  <section>
+    <div class="list-head">
+      <h2><span data-i18n="options.count"></span> <span class="pill" id="count">0</span></h2>
+      <div class="list-tools">
+        <input type="text" id="search" data-i18n-attr="placeholder:options.searchPlaceholder">
+        <button type="button" id="export" data-i18n="options.export"></button>
+        <button type="button" id="import" data-i18n="options.import"></button>
+        <input type="file" id="import-file" accept=".json,.csv" hidden>
+      </div>
+    </div>
+
+    <div id="empty" class="dotbox dotbox--tint empty">
+      <h3 data-i18n="options.emptyTitle"></h3>
+      <p class="muted small" data-i18n="options.emptyBody"></p>
+    </div>
+
+    <div id="table-wrap" class="dotbox table-wrap" hidden>
+      <table id="table">
+        <thead>
+          <tr>
+            <th data-i18n="options.arabic"></th>
+            <th data-i18n="options.english"></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="dotrule">
+
+  <section>
+    <div class="list-head">
+      <h2 data-i18n="options.queueTitle"></h2>
+      <button type="button" id="clear-queue" class="quiet" data-i18n="options.clearQueue"></button>
+    </div>
+    <p class="muted small" data-i18n="options.queueBody"></p>
+    <p id="queue-empty" class="muted small" data-i18n="options.queueEmpty"></p>
+    <div id="queue-wrap" class="dotbox table-wrap" hidden>
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="options.arabic"></th>
+            <th data-i18n="options.english"></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="queue-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+<script type="module" src="options.js"></script>
+</body>
+</html>

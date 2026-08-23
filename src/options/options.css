@@ -1,0 +1,81 @@
+/**
+ * The dictionary page. Same grammar as the name list: hairlines, grey doing the
+ * classifying, one accent on the one action.
+ */
+
+body { background: var(--grouped); }
+.page { max-width: 60rem; margin: 0 auto; padding: 2rem 1.4rem 4rem; }
+
+.head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.4rem;
+}
+.head h1 { margin: .2rem 0 .3rem; }
+
+.small { font-size: .88rem; }
+.msg { margin: .6rem 0 0; font-size: .88rem; color: var(--sage-d); }
+.msg[data-error="true"] { color: var(--danger); }
+
+/* Everything sits on a white card; the page behind it is grouped grey. */
+.dotbox, .card { box-shadow: 0 1px 2px rgba(0, 0, 0, .04); }
+
+/* ------------------------------------------------------------ assistant row */
+
+.assist-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+}
+.assist-row p { margin: .2rem 0 0; max-width: 46rem; color: var(--label-2); font-size: .9rem; }
+
+.switch { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; white-space: nowrap; }
+.switch input { width: 1.05rem; height: 1.05rem; accent-color: var(--sage); }
+
+/* --------------------------------------------------------------- add a name */
+
+.add-box h2 { margin-bottom: .8rem; }
+.add-grid {
+  display: grid; gap: .8rem;
+  grid-template-columns: 1fr 1fr auto; align-items: end;
+}
+@media (max-width: 44rem) { .add-grid { grid-template-columns: 1fr; } }
+.add-grid button { height: 2.6rem; padding-inline: 1.4rem; }
+
+#english { font-family: var(--sf); font-weight: 600; letter-spacing: -.01em; direction: ltr; text-align: left; }
+
+/* -------------------------------------------------------------------- lists */
+
+.list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: .7rem;
+}
+.list-head h2 { display: inline-flex; align-items: center; gap: .55rem; }
+.list-tools { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+.list-tools input { width: 15rem; font-size: .9rem; padding: .3rem .6rem; }
+
+.empty { text-align: center; padding: 2rem 1.2rem; color: var(--label-2); }
+.empty h3 { margin-bottom: .3rem; color: var(--label); }
+
+.table-wrap { padding: 0; overflow: auto; max-height: 26rem; }
+table { border-collapse: collapse; width: 100%; }
+thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--gray-50); text-align: start;
+  font-size: .74rem; font-weight: 400; color: var(--label-3);
+  padding: .5rem .9rem; border-bottom: .5px solid var(--sep);
+  white-space: nowrap;
+}
+tbody td { padding: .5rem .9rem; border-bottom: .5px solid var(--sep-2); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--gray-50); }
+
+td.ar-cell { direction: rtl; text-align: right; font-size: 1rem; white-space: nowrap; }
+td.en-cell {
+  font-family: var(--sf); font-weight: 600; letter-spacing: -.01em;
+  direction: ltr; text-align: left;
+}
+td.actions { text-align: end; white-space: nowrap; }
+td.actions button { font-size: .82rem; padding: .15rem .6rem; margin-inline-start: .3rem; }
+td.count {
+  color: var(--label-3); font-size: .8rem; text-align: center; width: 3rem;
+  font-family: var(--sf); font-variant-numeric: tabular-nums;
+}
