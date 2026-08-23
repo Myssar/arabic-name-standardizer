@@ -1,0 +1,283 @@
+/**
+ * Shared design system — quiet, Apple-derived.
+ *
+ * Three ideas carry the whole interface:
+ *
+ *   1. GREY DOES THE CLASSIFYING, NOT COLOUR. Three text weights — primary,
+ *      62%, 32% — separate a name from its label from its metadata. Colour is
+ *      reserved for exactly two things: the one action you are meant to take,
+ *      and the handful of rows that need a human. On a page of 500 names that
+ *      is the difference between scanning and reading.
+ *
+ *   2. HAIRLINES, NOT BOXES. Separators are half a pixel and inset from the
+ *      edge; there is no border around every element. Space does the grouping.
+ *
+ *   3. THE LATIN NAME IS THE PRODUCT, so it gets the largest, heaviest type on
+ *      screen, in the system UI face, always left-to-right, with tabular
+ *      figures so digits line up down a column.
+ *
+ * The palette is deliberately desaturated. A sage green is the single accent;
+ * amber marks the rows the engine had to guess at. Nothing else is coloured.
+ */
+
+:root {
+  /* Type. The Apple stack first, then whatever the platform actually has. */
+  --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+        "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
+  --ar: "SF Arabic", "Geeza Pro", "Noto Naskh Arabic", "Sakkal Majalla",
+        "Dubai", "Segoe UI", Tahoma, sans-serif;
+
+  /* Text, as opacities of one ink rather than separate greys. */
+  --label:    #1c1c1e;
+  --label-2:  rgba(60, 60, 67, .62);
+  --label-3:  rgba(60, 60, 67, .32);
+  --sep:      rgba(60, 60, 67, .16);
+  --sep-2:    rgba(60, 60, 67, .09);
+
+  --surface:  #ffffff;
+  --side:     #f6f6f8;
+  --fill:     #ececef;      /* resting button / search field */
+  --fill-2:   #e3e3e7;      /* its hover */
+  --grouped:  #f2f2f7;
+
+  /* The single accent. */
+  --sage:     #5f7f6e;
+  --sage-d:   #4d6a5b;
+  --sage-l:   #eef3f0;
+
+  /* Needs-a-human. Never used for anything else. */
+  --amber:    #a8813c;
+  --amber-bg: #fdfaf3;
+  --amber-bd: #ecd9b4;
+
+  --danger:   #a3392f;
+  --danger-bg:#fdf3f2;
+
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 24px -8px rgba(0, 0, 0, .16);
+
+  /* ---- compatibility aliases -------------------------------------------
+   * The page stylesheets were written against an older token set. Rather than
+   * rewrite every rule, the old names point at this palette, so one edit here
+   * restyles everything. Nothing new should use them.
+   */
+  --font: var(--ar);
+  --font-ar: var(--ar);
+  --size: 15px;
+  --ink: var(--label);
+  --ink-strong: var(--label);
+  --ink-soft: var(--label-2);
+  --ink-faint: var(--label-3);
+  --line: var(--sep);
+  --card: var(--surface);
+  --page: var(--grouped);
+  --accent: var(--sage);
+  --accent-soft: var(--sage-l);
+  --gray-50: #fbfbfc;  --gray-100: var(--fill);  --gray-200: var(--sep);
+  --gray-300: var(--sep);  --gray-400: var(--label-3);  --gray-500: var(--label-2);
+  --gray-600: var(--label-2);  --gray-700: var(--label);  --gray-900: var(--label);
+  --blue-50: var(--sage-l);  --blue-100: var(--sep-2);  --blue-200: var(--sage-l);
+  --blue-500: var(--sage);  --blue-600: var(--sage);  --blue-700: var(--sage-d);
+  --blue-900: var(--label);
+  --red-50: var(--danger-bg);  --red-200: #e8c3bf;  --red-600: var(--danger);
+  --r-lg-compat: var(--r-lg);
+  --shadow-sm: none;
+  --shadow-md: var(--shadow);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --label:   #f2f2f7;
+    --label-2: rgba(235, 235, 245, .62);
+    --label-3: rgba(235, 235, 245, .32);
+    --sep:     rgba(235, 235, 245, .18);
+    --sep-2:   rgba(235, 235, 245, .10);
+    --surface: #1c1c1e;
+    --side:    #232325;
+    --fill:    #2c2c2e;
+    --fill-2:  #3a3a3c;
+    --grouped: #000000;
+    --sage:    #7d9c8b;
+    --sage-d:  #93b0a0;
+    --sage-l:  #222e28;
+    --amber:   #d2a75c;
+    --amber-bg:#2a2418;
+    --amber-bd:#4a3d22;
+    --danger:  #e0837a;
+    --danger-bg:#2c1a18;
+    --gray-50: #232325;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { font-size: var(--size); }
+
+body {
+  margin: 0;
+  font-family: var(--ar);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--label);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * Every digit in this interface is Western and tabular. Arabic-Indic numerals
+ * are correct Arabic, but these numbers are row numbers and counts that sit
+ * beside Latin names and get pasted into spreadsheets — mixing the two forms in
+ * one column is what makes a list hard to scan.
+ */
+.num, .count, td.num, tbody td:first-child {
+  font-family: var(--sf);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ------------------------------------------------------------------ text */
+
+h1, h2, h3 {
+  margin: 0;
+  line-height: 1.3;
+  color: var(--label);
+  letter-spacing: -.02em;
+  font-weight: 600;
+}
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.1rem; }
+h3 { font-size: .95rem; }
+
+.muted { color: var(--label-2); }
+.faint { color: var(--label-3); }
+
+.eyebrow {
+  font-size: .78rem;
+  color: var(--label-3);
+  letter-spacing: .01em;
+}
+
+.label {
+  display: block;
+  font-size: .8rem;
+  color: var(--label-2);
+  margin-bottom: .35rem;
+}
+
+/* ---------------------------------------------------------------- fields */
+
+label.field { display: block; }
+
+textarea, input[type="text"], input[type="search"], select {
+  width: 100%;
+  font-family: var(--ar);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--label);
+  background: var(--surface);
+  border: 1px solid var(--sep);
+  border-radius: var(--r-md);
+  padding: .55rem .7rem;
+  outline: none;
+  transition: border-color .12s, box-shadow .12s;
+}
+textarea { resize: vertical; }
+textarea:focus, input:focus, select:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 3px var(--sage-l);
+}
+textarea::placeholder, input::placeholder { color: var(--label-3); }
+select { padding: .4rem .55rem; }
+
+/* --------------------------------------------------------------- buttons */
+
+button {
+  font-family: var(--ar);
+  font-size: .9rem;
+  padding: .4rem .85rem;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  color: var(--label);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  transition: background .12s, opacity .12s;
+}
+button:hover:not(:disabled) { background: var(--fill-2); }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+
+button.primary {
+  background: var(--sage);
+  color: #fff;
+  font-weight: 600;
+}
+button.primary:hover:not(:disabled) { background: var(--sage-d); }
+
+button.quiet {
+  background: transparent;
+  color: var(--label-2);
+  padding: .25rem .5rem;
+}
+button.quiet:hover:not(:disabled) { background: var(--fill); color: var(--label); }
+
+/* ------------------------------------------------------------- surfaces */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.1rem;
+}
+.dotbox { background: var(--surface); border-radius: var(--r-lg); padding: 1rem 1.1rem; }
+.dotbox--tight { padding: .7rem .85rem; }
+.dotrule { height: 0; margin: 1.2rem 0; border: 0; border-top: .5px solid var(--sep); }
+
+.pill {
+  display: inline-block;
+  font-family: var(--sf);
+  font-variant-numeric: tabular-nums;
+  font-size: .78rem;
+  padding: .05rem .5rem;
+  border-radius: 999px;
+  color: var(--label-2);
+  background: var(--fill);
+}
+
+.notice {
+  border-radius: var(--r-md);
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: .6rem .8rem;
+  font-size: .9rem;
+}
+
+/* Arabic runs right-to-left; a Latin name inside it never does. */
+.ar { direction: rtl; text-align: right; font-family: var(--ar); }
+.latin { direction: ltr; text-align: left; font-family: var(--sf); letter-spacing: -.01em; }
+
+/* --------------------------------------------------------- language pick */
+
+.lang-toggle { display: inline-flex; gap: .1rem; background: var(--fill); border-radius: var(--r-sm); padding: .1rem; }
+.lang-toggle button {
+  padding: .15rem .6rem;
+  font-size: .8rem;
+  background: transparent;
+  color: var(--label-2);
+  border-radius: 6px;
+}
+.lang-toggle button:hover { background: transparent; color: var(--label); }
+.lang-toggle button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--label);
+  font-weight: 600;
+}
+
+::selection { background: var(--sage-l); color: var(--label); }
