@@ -1,0 +1,531 @@
+/**
+ * Curated name dictionary.
+ *
+ * WHY A DICTIONARY AT ALL:
+ * Arabic script does not write short vowels. From the letters م-ح-م-د alone it is
+ * formally impossible to derive "Muhammad" rather than "Mahmad" or "Mihmid".
+ * No rule engine can recover information the orthography never encoded. The
+ * dictionary supplies that missing information for the names that actually occur;
+ * the rule engine in transliterate.js is a labelled-low-confidence fallback for
+ * everything else.
+ *
+ * ENTRY FORMAT: [arabic, primary, variants[], meta?]
+ *   primary  — the spelling most frequently printed in Arab passports
+ *   variants — other spellings the same person may hold documents under
+ *   meta.gender — 'm' | 'f' | null, used only for UI hints
+ *
+ * The `variants` list is the practically important field. A single two-part
+ * Arabic name can be romanized thousands of ways across different passport
+ * offices, so the tool's job is not only to propose a spelling but to show the
+ * user which other spellings are the *same name* when their documents disagree.
+ */
+
+import { lookupKey } from './normalize.js';
+
+const ENTRIES = [
+  // ---------------------------------------------------------------- male names
+  ['محمد', 'Muhammad', ['Mohammed', 'Mohamed', 'Mohammad', 'Muhammed', 'Mohd'], 'm'],
+  ['أحمد', 'Ahmed', ['Ahmad', 'Ahmet'], 'm'],
+  ['محمود', 'Mahmoud', ['Mahmud', 'Mahmood'], 'm'],
+  ['علي', 'Ali', ['Aly', 'Aali'], 'm'],
+  ['حسن', 'Hassan', ['Hasan', 'Hassaan'], 'm'],
+  ['حسين', 'Hussein', ['Hussain', 'Husayn', 'Hussien', 'Husein'], 'm'],
+  ['عمر', 'Omar', ['Umar', 'Omer'], 'm'],
+  ['عثمان', 'Othman', ['Osman', 'Uthman', 'Usman'], 'm'],
+  ['خالد', 'Khalid', ['Khaled'], 'm'],
+  ['سعيد', 'Saeed', ['Said', 'Saïd', 'Sayeed', 'Saed'], 'm'],
+  ['سعد', 'Saad', ['Sad', 'Sa’ad'], 'm'],
+  ['يوسف', 'Yousif', ['Youssef', 'Yusuf', 'Yousef', 'Yousuf', 'Joseph'], 'm'],
+  ['إبراهيم', 'Ibrahim', ['Ibraheem', 'Ebrahim'], 'm'],
+  ['إسماعيل', 'Ismail', ['Ismaeel', 'Esmail'], 'm'],
+  ['يعقوب', 'Yaqoob', ['Yakoub', 'Yaqub', 'Jacob'], 'm'],
+  ['إسحاق', 'Ishaq', ['Ishak', 'Isaac'], 'm'],
+  ['موسى', 'Mousa', ['Musa', 'Moussa', 'Moses'], 'm'],
+  ['عيسى', 'Issa', ['Isa', 'Eissa', 'Jesus'], 'm'],
+  ['داود', 'Dawood', ['Dawud', 'Daoud', 'David'], 'm'],
+  ['سليمان', 'Sulaiman', ['Suleiman', 'Sulayman', 'Solomon'], 'm'],
+  ['يحيى', 'Yahya', ['Yehia', 'Yahia'], 'm'],
+  ['زكريا', 'Zakaria', ['Zakariya', 'Zachariah'], 'm'],
+  ['إدريس', 'Idris', ['Idrees', 'Edris'], 'm'],
+  ['هارون', 'Haroon', ['Harun', 'Haroun', 'Aaron'], 'm'],
+  ['آدم', 'Adam', ['Aadam'], 'm'],
+  ['نوح', 'Nuh', ['Noah', 'Nooh'], 'm'],
+  ['يونس', 'Younis', ['Yunus', 'Younes', 'Jonah'], 'm'],
+  ['أيوب', 'Ayoub', ['Ayub', 'Ayyub', 'Job'], 'm'],
+  ['طه', 'Taha', ['Toha'], 'm'],
+  ['ياسين', 'Yassin', ['Yaseen', 'Yasin'], 'm'],
+  ['مصطفى', 'Mustafa', ['Moustafa', 'Mostafa'], 'm'],
+  ['مرتضى', 'Murtadha', ['Murtaza', 'Mortada'], 'm'],
+  ['كاظم', 'Kadhim', ['Kazim', 'Kazem', 'Kadim'], 'm'],
+  ['جعفر', 'Jaafar', ['Jafar', 'Jaffar'], 'm'],
+  ['صادق', 'Sadiq', ['Sadeq', 'Sadek'], 'm'],
+  ['باقر', 'Baqir', ['Baqer', 'Bakir'], 'm'],
+  ['هادي', 'Hadi', ['Haadi'], 'm'],
+  ['مهدي', 'Mahdi', ['Mehdi', 'Mahdy'], 'm'],
+  ['رضا', 'Ridha', ['Reza', 'Rida', 'Redha'], 'm'],
+  ['حيدر', 'Haidar', ['Haider', 'Hayder', 'Heidar'], 'm'],
+  ['عباس', 'Abbas', ['Abas'], 'm'],
+  ['قاسم', 'Qasim', ['Kassem', 'Qassem', 'Kazim'], 'm'],
+  ['كريم', 'Kareem', ['Karim'], 'm'],
+  ['رحيم', 'Raheem', ['Rahim'], 'm'],
+  ['حكيم', 'Hakeem', ['Hakim'], 'm'],
+  ['سليم', 'Saleem', ['Salim', 'Selim'], 'm'],
+  ['سالم', 'Salim', ['Salem'], 'm'],
+  ['نعيم', 'Naeem', ['Naim'], 'm'],
+  ['وسيم', 'Waseem', ['Wasim'], 'm'],
+  ['نبيل', 'Nabeel', ['Nabil'], 'm'],
+  ['جميل', 'Jameel', ['Jamil'], 'm'],
+  ['خليل', 'Khaleel', ['Khalil'], 'm'],
+  ['عادل', 'Adil', ['Adel', 'Aadil'], 'm'],
+  ['عامر', 'Amir', ['Aamir', 'Amer'], 'm'],
+  ['أمير', 'Ameer', ['Amir'], 'm'],
+  ['ماجد', 'Majid', ['Majed', 'Maged'], 'm'],
+  ['حامد', 'Hamid', ['Hamed'], 'm'],
+  ['حمزة', 'Hamza', ['Hamzah', 'Hamzeh'], 'm'],
+  ['أنس', 'Anas', ['Ans'], 'm'],
+  ['بلال', 'Bilal', ['Belal'], 'm'],
+  ['طارق', 'Tariq', ['Tarek', 'Tarik', 'Tareq'], 'm'],
+  ['زياد', 'Ziad', ['Zeyad', 'Zyad'], 'm'],
+  ['وليد', 'Waleed', ['Walid'], 'm'],
+  ['خليفة', 'Khalifa', ['Khalifah'], 'm'],
+  ['مروان', 'Marwan', ['Merwan'], 'm'],
+  ['معاذ', 'Muath', ['Muadh', 'Moaz'], 'm'],
+  ['معتز', 'Muataz', ['Moataz', 'Mutaz'], 'm'],
+  ['مؤيد', 'Muayad', ['Moayad', 'Muayyad'], 'm'],
+  ['مثنى', 'Muthanna', ['Muthana'], 'm'],
+  ['منتظر', 'Muntadhar', ['Muntazer', 'Muntather'], 'm'],
+  ['مصعب', 'Musab', ['Mosab'], 'm'],
+  ['سيف', 'Saif', ['Seif', 'Sayf'], 'm'],
+  ['ضياء', 'Dhiaa', ['Diaa', 'Zia', 'Dia'], 'm'],
+  ['علاء', 'Alaa', ['Ala', 'Alla'], 'm'],
+  ['بهاء', 'Bahaa', ['Baha'], 'm'],
+  ['رجاء', 'Rajaa', ['Raja'], null],
+  ['صفاء', 'Safaa', ['Safa'], null],
+  ['وفاء', 'Wafaa', ['Wafa'], 'f'],
+  ['هيثم', 'Haitham', ['Haytham', 'Hetham'], 'm'],
+  ['أيمن', 'Ayman', ['Aiman'], 'm'],
+  ['أيهم', 'Ayham', ['Aiham'], 'm'],
+  ['باسم', 'Basim', ['Bassem', 'Basem'], 'm'],
+  ['باسل', 'Basil', ['Bassel', 'Basel'], 'm'],
+  ['بشار', 'Bashar', ['Bashaar'], 'm'],
+  ['بشير', 'Basheer', ['Bashir'], 'm'],
+  ['بدر', 'Badr', ['Bader'], 'm'],
+  ['ثامر', 'Thamir', ['Thamer'], 'm'],
+  ['جابر', 'Jabir', ['Jaber'], 'm'],
+  ['جاسم', 'Jasim', ['Jassim', 'Jasem'], 'm'],
+  ['جلال', 'Jalal', ['Jelal'], 'm'],
+  ['جمال', 'Jamal', ['Gamal'], 'm'],
+  ['حازم', 'Hazim', ['Hazem'], 'm'],
+  ['حارث', 'Harith', ['Hareth'], 'm'],
+  ['حاتم', 'Hatim', ['Hatem'], 'm'],
+  ['حسام', 'Husam', ['Hossam', 'Hussam'], 'm'],
+  ['خضر', 'Khidhir', ['Khader', 'Khidr'], 'm'],
+  ['رائد', 'Raed', ['Raid', 'Raaid'], 'm'],
+  ['رامي', 'Rami', ['Ramy'], 'm'],
+  ['راشد', 'Rashid', ['Rashed'], 'm'],
+  ['رشيد', 'Rasheed', ['Rachid', 'Rashid'], 'm'],
+  ['رعد', 'Raad', ['Rad'], 'm'],
+  ['رافد', 'Rafid', ['Rafed'], 'm'],
+  ['زيد', 'Zaid', ['Zayd', 'Zeid'], 'm'],
+  ['زين', 'Zain', ['Zayn', 'Zein'], null],
+  ['سامي', 'Sami', ['Samy'], 'm'],
+  ['سامر', 'Samir', ['Samer'], 'm'],
+  ['سمير', 'Sameer', ['Samir'], 'm'],
+  ['شاكر', 'Shakir', ['Shaker'], 'm'],
+  ['شهاب', 'Shihab', ['Shehab'], 'm'],
+  ['صالح', 'Salih', ['Saleh', 'Salah'], 'm'],
+  ['صلاح', 'Salah', ['Salaah'], 'm'],
+  ['صباح', 'Sabah', ['Sabaah'], null],
+  ['ضرغام', 'Dhirgham', ['Dirgham'], 'm'],
+  ['طلال', 'Talal', ['Tallal'], 'm'],
+  ['عاصم', 'Asim', ['Assem', 'Asem'], 'm'],
+  ['عاطف', 'Atif', ['Atef'], 'm'],
+  ['عقيل', 'Aqeel', ['Aqil', 'Akeel'], 'm'],
+  ['عصام', 'Isam', ['Essam', 'Isaam'], 'm'],
+  ['عزيز', 'Aziz', ['Azeez'], 'm'],
+  ['عماد', 'Imad', ['Emad'], 'm'],
+  ['عمار', 'Ammar', ['Amar'], 'm'],
+  ['عوني', 'Awni', ['Ouni'], 'm'],
+  ['غازي', 'Ghazi', ['Ghazy'], 'm'],
+  ['غسان', 'Ghassan', ['Ghasan'], 'm'],
+  ['فادي', 'Fadi', ['Fady'], 'm'],
+  ['فارس', 'Faris', ['Fares'], 'm'],
+  ['فاضل', 'Fadhil', ['Fadel', 'Fazil'], 'm'],
+  ['فالح', 'Falih', ['Faleh'], 'm'],
+  ['فهد', 'Fahad', ['Fahd'], 'm'],
+  ['فراس', 'Firas', ['Feras'], 'm'],
+  ['فؤاد', 'Fuad', ['Foad', 'Fouad'], 'm'],
+  ['فيصل', 'Faisal', ['Faysal', 'Feisal'], 'm'],
+  ['قصي', 'Qusai', ['Qusay', 'Kusai'], 'm'],
+  ['كمال', 'Kamal', ['Kamaal'], 'm'],
+  ['لؤي', 'Luay', ['Loai', 'Louay'], 'm'],
+  ['ليث', 'Laith', ['Layth', 'Leith'], 'm'],
+  ['مالك', 'Malik', ['Malek'], 'm'],
+  ['مازن', 'Mazin', ['Mazen'], 'm'],
+  ['محسن', 'Muhsin', ['Mohsen', 'Mohsin'], 'm'],
+  ['مختار', 'Mukhtar', ['Mokhtar'], 'm'],
+  ['مراد', 'Murad', ['Mourad'], 'm'],
+  ['منذر', 'Munthir', ['Munzir', 'Monzer'], 'm'],
+  ['منير', 'Muneer', ['Munir'], 'm'],
+  ['مؤمن', 'Mumin', ['Momen'], 'm'],
+  ['ناصر', 'Nasir', ['Nasser', 'Naser'], 'm'],
+  ['نادر', 'Nadir', ['Nader'], 'm'],
+  ['نايف', 'Naif', ['Nayef', 'Nayif'], 'm'],
+  ['نزار', 'Nizar', ['Nezar'], 'm'],
+  ['نضال', 'Nidhal', ['Nidal'], null],
+  ['هاني', 'Hani', ['Hany'], 'm'],
+  ['هشام', 'Hisham', ['Hesham'], 'm'],
+  ['وائل', 'Wael', ['Wail'], 'm'],
+  ['وسام', 'Wisam', ['Wissam', 'Wesam'], null],
+  ['ياسر', 'Yasir', ['Yasser', 'Yaser'], 'm'],
+  ['زهير', 'Zuhair', ['Zuheir', 'Zoheir'], 'm'],
+  ['أنور', 'Anwar', ['Anouar'], 'm'],
+  ['أشرف', 'Ashraf', ['Achraf'], 'm'],
+  ['أكرم', 'Akram', ['Ekram'], 'm'],
+  ['أمجد', 'Amjad', ['Amgad'], 'm'],
+  ['أسامة', 'Usama', ['Osama', 'Oussama'], 'm'],
+  ['إياد', 'Iyad', ['Eyad'], 'm'],
+  ['إحسان', 'Ihsan', ['Ehsan'], null],
+  ['إيهاب', 'Ihab', ['Ehab'], 'm'],
+  ['تميم', 'Tamim', ['Tameem'], 'm'],
+  ['توفيق', 'Tawfiq', ['Tawfeeq', 'Toufic'], 'm'],
+  ['نور الدين', 'Nooruldeen', ['Nur al-Din', 'Nureddin', 'Noureddine'], 'm'],
+  ['سيف الدين', 'Saifuldeen', ['Saif al-Din', 'Seifeddine'], 'm'],
+  ['علاء الدين', 'Alauldeen', ['Ala al-Din', 'Alaeddine'], 'm'],
+  ['صلاح الدين', 'Salahuldeen', ['Salah al-Din', 'Salaheddine'], 'm'],
+  ['شمس الدين', 'Shamsuldeen', ['Shams al-Din'], 'm'],
+  ['بهاء الدين', 'Bahauldeen', ['Baha al-Din'], 'm'],
+  ['محي الدين', 'Muhyuldeen', ['Mohieldin', 'Muhyi al-Din'], 'm'],
+  ['عز الدين', 'Izzuldeen', ['Ezzeldin', 'Izz al-Din'], 'm'],
+
+  // ------------------------------------------------------- Abd- theophorics
+  // Handled generatively in transliterate.js, but the highest-frequency forms
+  // are pinned here so their conventional passport spelling always wins.
+  ['عبد الله', 'Abdullah', ['Abdallah', 'Abdalla', 'Abd Allah'], 'm'],
+  ['عبدالله', 'Abdullah', ['Abdallah', 'Abdalla'], 'm'],
+  ['عبد الرحمن', 'Abdulrahman', ['Abdurrahman', 'Abdel Rahman', 'Abdulrahmaan'], 'm'],
+  ['عبدالرحمن', 'Abdulrahman', ['Abdurrahman', 'Abdel Rahman'], 'm'],
+  ['عبد العزيز', 'Abdulaziz', ['Abdelaziz', 'Abdul Aziz'], 'm'],
+  ['عبدالعزيز', 'Abdulaziz', ['Abdelaziz'], 'm'],
+  ['عبد الكريم', 'Abdulkareem', ['Abdelkarim', 'Abdul Karim'], 'm'],
+  ['عبد الرحيم', 'Abdulraheem', ['Abdurrahim', 'Abdel Rahim'], 'm'],
+  ['عبد الحميد', 'Abdulhameed', ['Abdelhamid', 'Abdul Hamid'], 'm'],
+  ['عبد المجيد', 'Abdulmajeed', ['Abdelmajid', 'Abdul Majid'], 'm'],
+  ['عبد الجبار', 'Abduljabbar', ['Abdeljabbar'], 'm'],
+  ['عبد الستار', 'Abdulsattar', ['Abdessattar'], 'm'],
+  ['عبد الغني', 'Abdulghani', ['Abdelghani'], 'm'],
+  ['عبد الحسين', 'Abdulhussein', ['Abdel Hussein'], 'm'],
+  ['عبد الحق', 'Abdulhaq', ['Abdelhak'], 'm'],
+  ['عبد السلام', 'Abdulsalam', ['Abdessalam', 'Abdel Salam'], 'm'],
+  ['عبد القادر', 'Abdulqadir', ['Abdelkader', 'Abdul Qadir'], 'm'],
+  ['عبد اللطيف', 'Abdullatif', ['Abdellatif'], 'm'],
+  ['عبد الوهاب', 'Abdulwahhab', ['Abdelwahab'], 'm'],
+  ['عبد الصمد', 'Abdulsamad', ['Abdessamad'], 'm'],
+  ['عبد الرزاق', 'Abdulrazzaq', ['Abdurrazzaq', 'Abdel Razzak'], 'm'],
+  ['عبد الحكيم', 'Abdulhakeem', ['Abdelhakim'], 'm'],
+  ['عبد الخالق', 'Abdulkhaliq', ['Abdelkhalek'], 'm'],
+  ['عبد النبي', 'Abdulnabi', ['Abdelnabi'], 'm'],
+  ['عبد الأمير', 'Abdulameer', ['Abdul Amir'], 'm'],
+  ['عبد الزهرة', 'Abdulzahra', ['Abdul Zahra'], 'm'],
+  ['عبد الهادي', 'Abdulhadi', ['Abdelhadi'], 'm'],
+  ['عبد الواحد', 'Abdulwahid', ['Abdelwahed'], 'm'],
+  ['عبد المنعم', 'Abdulmunim', ['Abdelmoneim'], 'm'],
+  ['عبد الفتاح', 'Abdulfattah', ['Abdelfattah'], 'm'],
+  ['عبد الشهيد', 'Abdulshaheed', [], 'm'],
+
+  // -------------------------------------------------------------- female names
+  ['فاطمة', 'Fatima', ['Fatimah', 'Fatma', 'Fatemah'], 'f'],
+  ['عائشة', 'Aisha', ['Aishah', 'Ayesha', 'Aicha'], 'f'],
+  ['خديجة', 'Khadija', ['Khadijah', 'Khadeeja'], 'f'],
+  ['زينب', 'Zainab', ['Zaynab', 'Zeinab', 'Zeynep'], 'f'],
+  ['مريم', 'Maryam', ['Mariam', 'Meryem', 'Mary'], 'f'],
+  ['سارة', 'Sara', ['Sarah'], 'f'],
+  ['نور', 'Noor', ['Nour', 'Nur'], 'f'],
+  ['هدى', 'Huda', ['Hoda', 'Houda'], 'f'],
+  ['ليلى', 'Layla', ['Laila', 'Leila'], 'f'],
+  ['سلمى', 'Salma', ['Selma'], 'f'],
+  ['أسماء', 'Asmaa', ['Asma'], 'f'],
+  ['رقية', 'Ruqayya', ['Rukaya', 'Ruqaya'], 'f'],
+  ['سكينة', 'Sukaina', ['Sakina', 'Sukayna'], 'f'],
+  ['أمينة', 'Amina', ['Aminah', 'Ameena'], 'f'],
+  ['حليمة', 'Halima', ['Haleema'], 'f'],
+  ['كريمة', 'Karima', ['Kareema'], 'f'],
+  ['نادية', 'Nadia', ['Nadya'], 'f'],
+  ['سمية', 'Sumaya', ['Sumayya', 'Somaya'], 'f'],
+  ['رحمة', 'Rahma', ['Rahmah'], 'f'],
+  ['رنا', 'Rana', ['Ranna'], 'f'],
+  ['ريم', 'Reem', ['Rim'], 'f'],
+  ['دعاء', 'Duaa', ['Doaa', 'Dua'], 'f'],
+  ['إسراء', 'Israa', ['Esraa', 'Isra'], 'f'],
+  ['آلاء', 'Alaa', ['Aalaa'], 'f'],
+  ['هبة', 'Hiba', ['Heba', 'Hibah'], 'f'],
+  ['شيماء', 'Shaimaa', ['Shaymaa'], 'f'],
+  ['سناء', 'Sanaa', ['Sana'], 'f'],
+  ['هناء', 'Hanaa', ['Hana'], 'f'],
+  ['رؤى', 'Rua', ['Roa', 'Ruaa'], 'f'],
+  ['تقى', 'Tuqa', ['Toka'], 'f'],
+  ['أمل', 'Amal', ['Amel'], 'f'],
+  ['إيمان', 'Iman', ['Eman', 'Imaan'], 'f'],
+  ['إخلاص', 'Ikhlas', ['Ekhlas'], 'f'],
+  ['بشرى', 'Bushra', ['Boushra'], 'f'],
+  ['جنان', 'Jinan', ['Jenan'], 'f'],
+  ['حنان', 'Hanan', ['Hanane'], 'f'],
+  ['دلال', 'Dalal', ['Dallal'], 'f'],
+  ['رغد', 'Raghad', ['Ragad'], 'f'],
+  ['زهراء', 'Zahraa', ['Zahra', 'Zohra'], 'f'],
+  ['سحر', 'Sahar', ['Sahar'], 'f'],
+  ['سهى', 'Suha', ['Soha'], 'f'],
+  ['شذى', 'Shatha', ['Shadha'], 'f'],
+  ['صفية', 'Safiya', ['Safiyyah'], 'f'],
+  ['ضحى', 'Duha', ['Doha'], 'f'],
+  ['عبير', 'Abeer', ['Abir'], 'f'],
+  ['غادة', 'Ghada', ['Ghadah'], 'f'],
+  ['فرح', 'Farah', ['Farrah'], 'f'],
+  ['لبنى', 'Lubna', ['Loubna'], 'f'],
+  ['لمى', 'Lama', ['Lamma'], 'f'],
+  ['مروة', 'Marwa', ['Marwah'], 'f'],
+  ['منى', 'Muna', ['Mona'], 'f'],
+  ['ميساء', 'Maysaa', ['Maysa'], 'f'],
+  ['نجلاء', 'Najlaa', ['Najla'], 'f'],
+  ['نسرين', 'Nisreen', ['Nesreen', 'Nasrin'], 'f'],
+  ['نهى', 'Nuha', ['Noha'], 'f'],
+  ['هاجر', 'Hajar', ['Hagar'], 'f'],
+  ['هيفاء', 'Haifaa', ['Haifa'], 'f'],
+  ['وردة', 'Warda', ['Wardah'], 'f'],
+  ['يسرى', 'Yusra', ['Yousra'], 'f'],
+  ['بتول', 'Batool', ['Batoul'], 'f'],
+  ['تبارك', 'Tabarak', ['Tabaruk'], 'f'],
+  ['زهور', 'Zuhoor', ['Zohour'], 'f'],
+  ['شهد', 'Shahad', ['Shahd'], 'f'],
+  ['فرقد', 'Farqad', ['Farkad'], 'm'],
+  ['نبأ', 'Nabaa', ['Naba'], 'f'],
+  ['ولاء', 'Walaa', ['Wala'], 'f'],
+  ['آية', 'Aya', ['Ayah', 'Aia'], 'f'],
+  ['رسل', 'Rusul', ['Rusl'], 'f'],
+  ['زبيدة', 'Zubaida', ['Zubayda'], 'f'],
+  ['سجى', 'Suja', ['Soja'], 'f'],
+
+  ['كامل', 'Kamil', ['Kamel', 'Kamal'], 'm'],
+  ['وليد', 'Waleed', ['Walid'], 'm'],
+  ['كلثوم', 'Kulthum', ['Kalthoum', 'Kulthoom'], 'f'],
+  ['شكور', 'Shakoor', ['Shakur'], 'm'],
+  ['سعود', 'Saud', ['Saoud', 'Saood'], 'm'],
+  ['هدى', 'Huda', ['Hoda', 'Houda'], 'f'],
+  ['وحيد', 'Waheed', ['Wahid'], 'm'],
+  ['رشاد', 'Rashad', ['Rachad'], 'm'],
+  ['سهيل', 'Suhail', ['Sohail', 'Suhayl'], 'm'],
+  ['نجم', 'Najim', ['Najm', 'Nejm'], 'm'],
+  ['صابر', 'Sabir', ['Saber'], 'm'],
+  ['ثائر', 'Thair', ['Thaer'], 'm'],
+  ['علوان', 'Alwan', ['Elwan'], 'm'],
+  ['كنعان', 'Kanaan', ['Kanan'], 'm'],
+  ['عدنان', 'Adnan', ['Adnaan'], 'm'],
+  ['سلوان', 'Salwan', ['Selwan'], 'm'],
+  ['شيماء', 'Shaimaa', ['Shaymaa', 'Shayma'], 'f'],
+  ['نجاة', 'Najat', ['Nagat'], 'f'],
+  ['سعاد', 'Suad', ['Souad', 'Soad'], 'f'],
+  ['عواطف', 'Awatif', ['Awatef'], 'f'],
+  ['ابتسام', 'Ibtisam', ['Ebtesam'], 'f'],
+  ['انتصار', 'Intisar', ['Entesar'], 'f'],
+  ['أفراح', 'Afrah', ['Afraah'], 'f'],
+  ['بيداء', 'Baidaa', ['Baida'], 'f'],
+  ['سندس', 'Sundus', ['Sondos'], 'f'],
+  ['أروى', 'Arwa', ['Arwaa'], 'f'],
+  ['دينا', 'Dina', ['Deena'], 'f'],
+  ['رؤيا', 'Ruya', ['Roya'], 'f'],
+
+  // ------------------------------------------- common family / tribal names
+  ['العبيدي', 'Al-Obaidi', ['Alobaidi', 'Al Ubaidi'], null],
+  ['الجبوري', 'Al-Jubouri', ['Aljubori', 'Al Jaburi'], null],
+  ['الدليمي', 'Al-Dulaimi', ['Aldulaimi', 'Al Dulaymi'], null],
+  ['الشمري', 'Al-Shammari', ['Alshammari'], null],
+  ['التميمي', 'Al-Tamimi', ['Altamimi'], null],
+  ['الزيدي', 'Al-Zaidi', ['Alzaidi', 'Al Zaydi'], null],
+  ['الربيعي', 'Al-Rubaie', ['Alrubaie', 'Al Rabiee'], null],
+  ['الخفاجي', 'Al-Khafaji', ['Alkhafaji'], null],
+  ['العزاوي', 'Al-Azzawi', ['Alazzawi'], null],
+  ['الساعدي', 'Al-Saedi', ['Alsaedi', 'Al Saadi'], null],
+  ['الموسوي', 'Al-Mousawi', ['Almusawi', 'Al Musawi'], null],
+  ['الحسيني', 'Al-Husseini', ['Alhusseini', 'Al Husayni'], null],
+  ['الهاشمي', 'Al-Hashimi', ['Alhashimi', 'Al Hashemi'], null],
+  ['الجنابي', 'Al-Janabi', ['Aljanabi'], null],
+  ['الكعبي', 'Al-Kaabi', ['Alkaabi'], null],
+  ['المالكي', 'Al-Maliki', ['Almaliki'], null],
+  ['البياتي', 'Al-Bayati', ['Albayati'], null],
+  ['القيسي', 'Al-Qaisi', ['Alqaisi', 'Al Kaysi'], null],
+  ['النعيمي', 'Al-Nuaimi', ['Alnuaimi'], null],
+  ['العاني', 'Al-Ani', ['Alani'], null],
+  ['السامرائي', 'Al-Samarrai', ['Alsamarrai'], null],
+  ['الحلفي', 'Al-Halfi', ['Alhalfi'], null],
+  ['الغانمي', 'Al-Ghanmi', ['Alghanimi'], null],
+  ['الفتلاوي', 'Al-Fatlawi', ['Alfatlawi'], null],
+  ['البغدادي', 'Al-Baghdadi', ['Albaghdadi'], null],
+  ['الموصلي', 'Al-Mosuli', ['Almosuli'], null],
+  ['البصري', 'Al-Basri', ['Albasri'], null],
+  ['النجفي', 'Al-Najafi', ['Alnajafi'], null],
+  ['الكربلائي', 'Al-Karbalai', ['Alkarbalaie'], null],
+  ['الحديثي', 'Al-Hadithi', ['Alhadithi'], null],
+  ['الطائي', 'Al-Taie', ['Altaie', 'Al Tai'], null],
+  ['العامري', 'Al-Amiri', ['Alamiri'], null],
+  ['الخالدي', 'Al-Khalidi', ['Alkhalidi'], null],
+  ['الأنصاري', 'Al-Ansari', ['Alansari'], null],
+  ['القرشي', 'Al-Qurashi', ['Alqurashi'], null],
+  ['الشيخ', 'Al-Sheikh', ['Alsheikh', 'Al Shaykh'], null],
+  ['الحاج', 'Al-Hajj', ['Alhaj', 'El Hage'], null],
+  // -------------------------------------------------- added after the accuracy
+  // audit of v2.3.0. Every entry below replaced a rule-engine guess that a real
+  // person would have rejected on a form — the rule column shows what the
+  // engine produced before the entry existed.
+
+  // Male given names   (rules gave: Salatan, Mabarak, Qahatan, Hamadan, ...)
+  ['سلطان', 'Sultan', ['Soltan'], 'm'],
+  ['مبارك', 'Mubarak', ['Moubarak'], 'm'],
+  ['قحطان', 'Qahtan', ['Kahtan'], 'm'],
+  ['حمدان', 'Hamdan', ['Hamdaan'], 'm'],
+  ['تحسين', 'Tahseen', ['Tahsin'], 'm'],
+  ['شمس', 'Shams', ['Shams'], null],
+  ['أوس', 'Aws', ['Aous', 'Ows'], 'm'],
+  ['براء', 'Baraa', ['Bara', 'Baraah'], null],
+  ['قصي', 'Qusay', ['Qusai', 'Kusay'], 'm'],
+  ['ثائر', 'Thaer', ['Thaier', 'Tha’er'], 'm'],
+  ['نصر', 'Nasr', ['Nasser', 'Nassr'], 'm'],
+  ['فتح', 'Fath', ['Fateh'], 'm'],
+  ['عطا', 'Ata', ['Atta', 'Attah'], 'm'],
+  ['سيف', 'Saif', ['Sayf', 'Seif'], 'm'],
+  ['كرار', 'Karrar', ['Karar'], 'm'],
+  ['سجاد', 'Sajjad', ['Sajad'], 'm'],
+  ['معتصم', 'Muatasim', ['Mutasim', 'Moatasem'], 'm'],
+  ['نبراس', 'Nibras', ['Nebras'], null],
+  ['صخر', 'Sakhr', ['Sakher'], 'm'],
+  ['قيس', 'Qais', ['Qays', 'Kais'], 'm'],
+  ['ربيع', 'Rabee', ['Rabie', 'Rabia'], 'm'],
+  ['ذوالفقار', 'Thulfiqar', ['Zulfiqar', 'Dhulfiqar'], 'm'],
+  ['ظافر', 'Dhafir', ['Zafer', 'Thafir'], 'm'],
+  ['خضير', 'Khudhair', ['Khudair', 'Khuthair'], 'm'],
+  ['أمير', 'Ameer', ['Amir', 'Emir'], 'm'],
+  ['سيد', 'Sayed', ['Sayyid', 'Said'], 'm'],
+  ['رائد', 'Raed', ['Raid', 'Rayed'], 'm'],
+  ['مقدام', 'Miqdam', ['Meqdad'], 'm'],
+  ['عبد', 'Abd', ['Abed', 'Abd'], 'm'],
+
+  // Female given names — the weaker half of the coverage in the audit
+  ['أميرة', 'Ameera', ['Amira', 'Amera'], 'f'],
+  ['ملك', 'Malak', ['Malek'], 'f'],
+  ['سيدة', 'Sayeda', ['Sayyida'], 'f'],
+  ['حوراء', 'Hawraa', ['Hawra', 'Haura'], 'f'],
+  ['عذراء', 'Adhraa', ['Athraa', 'Azraa'], 'f'],
+  ['غفران', 'Ghufran', ['Ghofran'], 'f'],
+  ['استبرق', 'Istabraq', ['Estabraq'], 'f'],
+  ['انتظار', 'Intidhar', ['Intizar', 'Entithar'], 'f'],
+  ['ابتهال', 'Ibtihal', ['Ebtehal'], 'f'],
+  ['ضحى', 'Dhuha', ['Duha', 'Doha'], 'f'],
+  ['ياسمين', 'Yasmeen', ['Yasmin', 'Jasmine'], 'f'],
+  ['نرجس', 'Narjis', ['Nargis', 'Narges'], 'f'],
+  ['زينة', 'Zeina', ['Zena', 'Zaina'], 'f'],
+  ['سماء', 'Samaa', ['Sama', 'Samah'], 'f'],
+  ['سلوى', 'Salwa', ['Salua'], 'f'],
+  ['دنيا', 'Dunya', ['Donia', 'Dunia'], 'f'],
+  ['رند', 'Rand', ['Randa'], 'f'],
+  ['بنين', 'Baneen', ['Banin'], 'f'],
+  ['أسيل', 'Aseel', ['Asil', 'Assel'], 'f'],
+  ['ايلاف', 'Elaf', ['Ilaf', 'Eelaf'], 'f'],
+  ['تبارك', 'Tabarak', ['Tabarek'], 'f'],
+  ['رقية', 'Ruqaya', ['Ruqayyah', 'Rokaya'], 'f'],
+  ['شهد', 'Shahad', ['Shahd'], 'f'],
+  ['غدير', 'Ghadeer', ['Ghadir'], 'f'],
+  ['هبة', 'Hiba', ['Heba', 'Hibah'], 'f'],
+
+  // Family and tribal names   (rules gave: Al-Zabidi, Al-Kazami, Al-Mashahadani)
+  ['الزبيدي', 'Al-Zubaidi', ['Al-Zubeidi', 'Zubaidi'], null],
+  ['الكاظمي', 'Al-Kadhimi', ['Al-Kazimi', 'Kadhimi'], null],
+  ['الصفار', 'Al-Saffar', ['Al-Saffaar', 'Saffar'], null],
+  ['المشهداني', 'Al-Mashhadani', ['Mashhadani'], null],
+  ['الياسري', 'Al-Yasiri', ['Al-Yaseri', 'Yasiri'], null],
+  ['الحلي', 'Al-Hilli', ['Al-Hilly', 'Hilli'], null],
+  ['العلواني', 'Al-Alwani', ['Alwani'], null],
+  ['البارزاني', 'Al-Barzani', ['Barzani'], null],
+  ['الطالباني', 'Al-Talabani', ['Talabani'], null],
+  ['الشويلي', 'Al-Shuwaili', ['Shuwaili'], null],
+  ['الحيالي', 'Al-Hayali', ['Hayali'], null],
+  ['الغريباوي', 'Al-Ghuraibawi', ['Ghuraibawi'], null],
+  ['الجميلي', 'Al-Jumaili', ['Jumaili', 'Al-Jamili'], null],
+  ['العيساوي', 'Al-Issawi', ['Issawi'], null],
+  ['الكبيسي', 'Al-Kubaisi', ['Kubaisi'], null],
+  ['السوداني', 'Al-Sudani', ['Sudani'], null],
+  ['الخزعلي', 'Al-Khazali', ['Khazali', 'Al-Khazaali'], null],
+  ['الربيعي', 'Al-Rubaie', ['Al-Rubaei', 'Rubaie'], null],
+  ['البياتي', 'Al-Bayati', ['Bayati'], null],
+  ['العامري', 'Al-Ameri', ['Al-Amiri', 'Ameri'], null],
+
+  // X + الله, pinned so the generative branch never has to guess them
+  ['نصر الله', 'Nasrallah', ['Nasrullah', 'Nasr Allah'], 'm'],
+  ['نصرالله', 'Nasrallah', ['Nasrullah'], 'm'],
+  ['عطا الله', 'Ataallah', ['Atallah', 'Ataullah'], 'm'],
+  ['هبة الله', 'Hibatullah', ['Hibatallah'], null],
+  ['سيف الله', 'Saifullah', ['Saifallah'], 'm'],
+  ['فتح الله', 'Fathallah', ['Fathullah'], 'm'],
+  ['جار الله', 'Jarallah', ['Jarullah'], 'm'],
+  ['عبيد الله', 'Ubaidullah', ['Obeidullah'], 'm'],
+  ['رحمة الله', 'Rahmatullah', ['Rahmatallah'], null],
+
+];
+
+/** Map from folded lookup key -> record. */
+const INDEX = new Map();
+
+for (const [arabic, primary, variants, gender] of ENTRIES) {
+  const key = lookupKey(arabic);
+  if (!INDEX.has(key)) {
+    INDEX.set(key, {
+      arabic,
+      primary,
+      variants: variants ?? [],
+      gender: gender ?? null,
+    });
+  }
+}
+
+/**
+ * User-approved spellings, layered over the built-in table.
+ *
+ * This is the mechanism that makes a shared standard possible: when a registrar
+ * decides that a name is spelled a particular way, that decision has to win
+ * everywhere in the tool — inline suggestions, the popup and bulk exports —
+ * or the tool is producing two different "standards" at once.
+ */
+const OVERRIDES = new Map();
+
+/**
+ * Replace the override layer.
+ * @param {Record<string,string>} entries  raw Arabic -> approved spelling
+ */
+export function setOverrides(entries) {
+  OVERRIDES.clear();
+  for (const [arabic, latin] of Object.entries(entries ?? {})) {
+    const key = lookupKey(arabic);
+    const value = String(latin ?? '').trim();
+    // An empty value would silently erase a built-in entry, which is a
+    // surprising way to lose a name. Ignore it.
+    if (!key || !value) continue;
+    OVERRIDES.set(key, { arabic, primary: value, variants: [], gender: null, approved: true });
+  }
+}
+
+export function overrideCount() {
+  return OVERRIDES.size;
+}
+
+/** Look up a single token or a whole normalized name. Returns null on miss. */
+export function lookup(arabicToken) {
+  const key = lookupKey(arabicToken);
+  return OVERRIDES.get(key) ?? INDEX.get(key) ?? null;
+}
+
+export function entryCount() {
+  return INDEX.size;
+}
+
+/** Exposed for tests and for the "browse the dictionary" popup view. */
+export function allEntries() {
+  return [...INDEX.values()];
+}
